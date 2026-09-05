@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Gravitas · Bet on Bitcoin</title>
+<meta name="description" content="Say where Bitcoin goes. Watch your money travel. Know the worst case before you pay.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;500;700&family=Inter:wght@400;500&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#2b1a6e; --bg2:#1a0f4a; --ink:#ffffff; --ink2:rgba(255,255,255,.72); --ink3:rgba(255,255,255,.45);
+  --gold:#f2b544; --win:#19e08a; --loss:#ff4d6d; --line:rgba(255,255,255,.14);
+  --disp:'Space Grotesk',ui-sans-serif,system-ui,sans-serif; --body:'Inter',ui-sans-serif,sans-serif; --mono:'JetBrains Mono',ui-monospace,monospace;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:auto}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+a{color:inherit;text-decoration:none}
+#world{position:fixed;inset:0;z-index:0;width:100%;height:100%}
+.grain{position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.10;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.5'/%3E%3C/svg%3E")}
+/* the page is a tall scroll track; the world is fixed and driven by scrollY */
+#track{position:relative;z-index:2;height:720vh;pointer-events:none}
+nav{position:fixed;top:0;left:0;right:0;z-index:40;display:flex;align-items:center;justify-content:space-between;padding:22px 32px;pointer-events:none}
+nav>*{pointer-events:auto}
+.logo{display:flex;align-items:center;gap:11px;font-family:var(--disp);font-size:19px;font-weight:700;letter-spacing:-.02em}
+.btn{border-radius:999px;padding:12px 22px;font-size:13.5px;font-weight:500;font-family:var(--body);cursor:pointer;border:1.5px solid transparent;display:inline-flex;align-items:center;gap:9px;transition:transform .25s cubic-bezier(.16,1,.3,1),box-shadow .25s}
+.btn.solid{background:var(--ink);color:var(--bg2)}
+.btn.solid:hover{transform:translateY(-2px) scale(1.03);box-shadow:0 14px 40px rgba(0,0,0,.35)}
+.btn.gold{background:var(--gold);color:#1a0f2e;font-weight:700}
+.btn.gold:hover{transform:translateY(-2px) scale(1.04);box-shadow:0 16px 46px rgba(242,181,68,.45)}
+.btn.ghost{border-color:var(--line);color:var(--ink2);background:rgba(0,0,0,.15);backdrop-filter:blur(8px)}
+.snd{width:42px;height:42px;border-radius:50%;border:1.5px solid var(--line);background:rgba(0,0,0,.15);backdrop-filter:blur(8px);display:grid;place-items:center;cursor:pointer;color:var(--ink2)}
+.snd.on{color:var(--gold);border-color:var(--gold)}
+
+/* HUD: the one line of copy per arena, and the running money */
+.hud{position:fixed;inset:0;z-index:3;pointer-events:none}
+.stage{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);text-align:center;opacity:0;transition:opacity .45s;pointer-events:none}
+.stage.on{opacity:1}
+.stage.on .cta,.stage.on .pills{pointer-events:auto}
+.stage h1,.stage h2{font-family:var(--disp);font-weight:700;letter-spacing:-.04em;line-height:.94;margin:0;
+  font-size:clamp(46px,9vw,124px);text-shadow:0 10px 60px rgba(0,0,0,.35)}
+.stage h1 em,.stage h2 em{font-style:normal;color:var(--gold)}
+.stage .sub{font-size:clamp(14px,1.4vw,18px);color:var(--ink2);margin:18px 0 0;font-weight:400}
+.stage .cta{margin-top:28px;display:inline-flex}
+.stage.bottom{top:auto;bottom:9vh;transform:none}
+.stage.top{top:14vh;transform:none}
+.pills{display:inline-flex;gap:8px;margin-top:24px;flex-wrap:wrap;justify-content:center}
+.mp{border:1.5px solid var(--line);border-radius:999px;padding:11px 20px;font-size:14px;color:var(--ink);cursor:pointer;background:rgba(0,0,0,.18);backdrop-filter:blur(10px);font-family:var(--body);font-weight:500;transition:all .25s cubic-bezier(.16,1,.3,1)}
+.mp:hover{transform:translateY(-2px);border-color:var(--ink2)}
+.mp[aria-pressed="true"]{background:var(--ink);color:var(--bg2);border-color:var(--ink)}
+/* the money counter: always on, top right, rolls */
+.money{position:fixed;right:32px;top:88px;z-index:4;text-align:right;pointer-events:none}
+.money .k{font-family:var(--mono);font-size:10px;letter-spacing:.22em;color:var(--ink3)}
+.money .v{font-family:var(--mono);font-size:clamp(28px,3.4vw,44px);font-weight:700;letter-spacing:-.03em;line-height:1;margin-top:4px;transition:color .3s;text-shadow:0 0 30px currentColor}
+.money .v.win{color:var(--win)} .money .v.loss{color:var(--loss)}
+/* arena name plates: letterforms in the world, driven by JS */
+.plate{position:fixed;left:32px;bottom:34px;z-index:4;font-family:var(--mono);font-size:11px;letter-spacing:.24em;color:var(--ink3);pointer-events:none}
+.plate b{display:block;font-family:var(--disp);font-size:clamp(20px,2.4vw,30px);font-weight:700;letter-spacing:-.03em;color:var(--ink);margin-top:6px}
+/* worst-case tag, appears in arenas where it matters */
+.worst{position:fixed;left:50%;bottom:34px;transform:translateX(-50%);z-index:4;font-size:13px;color:var(--ink2);pointer-events:none;opacity:0;transition:opacity .4s;display:flex;gap:9px;align-items:center;background:rgba(0,0,0,.25);padding:9px 16px;border-radius:999px;backdrop-filter:blur(10px)}
+.worst.on{opacity:1}.worst i{width:7px;height:7px;border-radius:50%;background:var(--win)}.worst.hot i{background:var(--loss)}
+.worst.hot{color:#ffd0d8}
+.hint{position:fixed;bottom:34px;right:32px;z-index:4;font-family:var(--mono);font-size:10px;letter-spacing:.22em;color:var(--ink3);display:flex;align-items:center;gap:10px;pointer-events:none}
+.hint i{width:1px;height:26px;background:linear-gradient(var(--ink3),transparent);display:block;animation:hint 1.8s ease-in-out infinite}
+@keyframes hint{0%,100%{transform:scaleY(.4);opacity:.3}50%{transform:scaleY(1);opacity:1}}
+/* burst flash on a win */
+.flash{position:fixed;inset:0;z-index:2;pointer-events:none;background:var(--win);opacity:0}
+.flash.go{animation:fl .55s ease-out}
+@keyframes fl{0%{opacity:.35}100%{opacity:0}}
+.kick{animation:kick .32s cubic-bezier(.2,.8,.2,1)}
+@keyframes kick{0%{transform:translate(0,0)}25%{transform:translate(-6px,4px)}50%{transform:translate(5px,-3px)}75%{transform:translate(-3px,2px)}100%{transform:translate(0,0)}}
+@media(max-width:800px){.money{top:78px;right:20px}.plate{left:20px}.hint{display:none}nav{padding:16px 20px}}
+</style>
+</head>
+<body>
+<canvas id="world"></canvas>
+<div class="grain"></div>
+<div class="flash" id="flash"></div>
+
+<nav>
+  <a class="logo" href="#"><svg width="30" height="30" viewBox="0 0 32 32" fill="none"><ellipse cx="16" cy="16" rx="14.2" ry="7" stroke="rgba(255,255,255,.35)" stroke-width="1.2" transform="rotate(-28 16 16)"/><path d="M2.6 24.2 H12.4 L29.4 6.6" stroke="#f2b544" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12.4" cy="24.2" r="3.1" fill="#2b1a6e" stroke="#f2b544" stroke-width="2.2"/></svg>Gravitas</a>
+  <div style="display:flex;gap:10px;align-items:center">
+    <button class="snd" id="snd" aria-label="Sound" title="Sound"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4z"/><path id="snd-w" d="M15.5 8.5a5 5 0 0 1 0 7" opacity=".0"/></svg></button>
+    <a class="btn ghost" href="#">Log in</a><a class="btn solid" href="#">Get started</a>
+  </div>
+</nav>
+
+<div class="hud">
+  <!-- 0 hero -->
+  <div class="stage top on" id="s0">
+    <h1>Bet on <em>Bitcoin.</em></h1>
+    <p class="sub">Say where it goes. Watch your money travel. Scroll.</p>
+  </div>
+  <!-- 1 easy options -->
+  <div class="stage top" id="s1">
+    <h2>Which way?</h2>
+    <div class="pills" id="pills">
+      <button class="mp" data-k="up" aria-pressed="true">Up</button>
+      <button class="mp" data-k="down" aria-pressed="false">Down</button>
+      <button class="mp" data-k="flat" aria-pressed="false">Sideways</button>
+      <button class="mp" data-k="big" aria-pressed="false">Big swing</button>
+    </div>
+  </div>
+  <!-- 2 hero zero -->
+  <div class="stage top" id="s2"><h2>Clear the line <em>today.</em></h2><p class="sub">Small ticket. Doubles if it makes it. Gone if it doesn't.</p></div>
+  <!-- 3 expiry -->
+  <div class="stage top" id="s3"><h2>Call the <em>landing.</em></h2><p class="sub">Where does it close on Friday? Closer pays more.</p></div>
+  <!-- 4 builder -->
+  <div class="stage top" id="s4"><h2>Build your <em>own.</em></h2><p class="sub">Snap the pieces. The worst case rewrites as you go.</p></div>
+  <!-- 5 board -->
+  <div class="stage top" id="s5"><h2>The <em>board.</em></h2><p class="sub">Every price Bybit is trading, live. Bright is busy. We never send you somewhere empty.</p></div>
+  <!-- 6 close -->
+  <div class="stage" id="s6"><h2>You already have<br>an <em>opinion.</em></h2><p class="sub">Now it can pay you. One login.</p><a class="btn gold cta" href="#">Get started</a><p class="sub" style="font-size:12px;color:var(--ink3);margin-top:22px">Bets can and often do lose everything you put in. Not financial advice.</p></div>
+</div>
+
+<div class="money"><div class="k">YOUR MONEY</div><div class="v" id="money">$250</div></div>
+<div class="plate" id="plate">GRAVITAS<b>&nbsp;</b></div>
+<div class="worst" id="worst"><i></i><span id="worst-t">The most you can lose is the $250 you paid.</span></div>
+<div class="hint"><i></i>SCROLL</div>
+<div id="track"></div>
+
+<script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js","three/addons/":"https://unpkg.com/three@0.160.0/examples/jsm/"}}</script>
+<script type="module">
+import * as THREE from 'three';
+import {EffectComposer} from 'three/addons/postprocessing/EffectComposer.js';
+import {RenderPass} from 'three/addons/postprocessing/RenderPass.js';
+import {UnrealBloomPass} from 'three/addons/postprocessing/UnrealBloomPass.js';
+
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const GOLD=new THREE.Color('#f2b544'),WIN=new THREE.Color('#19e08a'),LOSS=new THREE.Color('#ff4d6d'),VIOLET=new THREE.Color('#2b1a6e'),DEEP=new THREE.Color('#1a0f4a'),WHITE=new THREE.Color('#ffffff');
+const money=v=>(v<0?'−$':'$')+Math.abs(Math.round(v)).toLocaleString('en-US');
+const lerp=(a,b,t)=>a+(b-a)*t, clamp=(v,a,b)=>Math.max(a,Math.min(b,v)), smooth=t=>t*t*(3-2*t);
+
+/* ───────── sound: synthesised, no assets, off until the user turns it on ───────── */
+let AC=null,SND=false;
+function ac(){if(!AC){AC=new (window.AudioContext||window.webkitAudioContext)();}if(AC.state==='suspended')AC.resume();return AC;}
+function tone(f,dur,type='sine',gain=.08,slide=0){if(!SND)return;const c=ac(),o=c.createOscillator(),g=c.createGain();o.type=type;o.frequency.setValueAtTime(f,c.currentTime);if(slide)o.frequency.exponentialRampToValueAtTime(Math.max(30,f+slide),c.currentTime+dur);
+  g.gain.setValueAtTime(gain,c.currentTime);g.gain.exponentialRampToValueAtTime(.0001,c.currentTime+dur);o.connect(g).connect(c.destination);o.start();o.stop(c.currentTime+dur);}
+const sfx={clink:()=>{tone(1900,.09,'triangle',.06);setTimeout(()=>tone(2600,.07,'triangle',.04),40);},
+  win:()=>{[523,659,784,1047].forEach((f,i)=>setTimeout(()=>tone(f,.22,'square',.05),i*70));},
+  lose:()=>{tone(180,.35,'sawtooth',.07,-120);},tick:()=>tone(900,.03,'square',.02)};
+$('#snd').onclick=()=>{SND=!SND;$('#snd').classList.toggle('on',SND);$('#snd-w').style.opacity=SND?1:0;if(SND){ac();sfx.clink();}};
+
+/* ───────── renderer, bloom ───────── */
+const cv=$('#world'),ren=new THREE.WebGLRenderer({canvas:cv,antialias:true});ren.setPixelRatio(Math.min(devicePixelRatio,1.75));ren.toneMapping=THREE.ACESFilmicToneMapping;ren.toneMappingExposure=1.05;
+const scene=new THREE.Scene();scene.background=VIOLET;scene.fog=new THREE.Fog(VIOLET,10,34);
+const cam=new THREE.PerspectiveCamera(46,1,.1,200);
+const comp=new EffectComposer(ren);comp.addPass(new RenderPass(scene,cam));
+const bloom=new UnrealBloomPass(new THREE.Vector2(1,1),.55,.6,.82);comp.addPass(bloom);
+function fit(){const w=innerWidth,h=innerHeight;ren.setSize(w,h,false);comp.setSize(w,h);cam.aspect=w/h;cam.updateProjectionMatrix();}
+addEventListener('resize',fit);fit();
+scene.add(new THREE.HemisphereLight(0xffffff,0x2b1a6e,.9));
+const sun=new THREE.DirectionalLight(0xffffff,1.6);sun.position.set(6,14,8);scene.add(sun);
+const rim=new THREE.PointLight(0xf2b544,30,40);rim.position.set(-8,6,-6);scene.add(rim);
+
+/* ───────── the world: arenas laid along z, camera flies down the track ───────── */
+const ARENA_Z=[0,-60,-120,-180,-240,-300,-360];   // hero, easy, herozero, expiry, builder, board, close
+const world=new THREE.Group();scene.add(world);
+const floorMat=new THREE.MeshStandardMaterial({color:DEEP,roughness:.9,metalness:0});
+const floor=new THREE.Mesh(new THREE.PlaneGeometry(80,460),floorMat);floor.rotation.x=-Math.PI/2;floor.position.set(0,-2.2,-180);world.add(floor);
+const grid=new THREE.GridHelper(460,230,0x4a36a8,0x3a2890);grid.position.set(0,-2.19,-180);grid.material.transparent=true;grid.material.opacity=.35;world.add(grid);
+/* a lane of light down the middle so the track reads as a path */
+const lane=new THREE.Mesh(new THREE.PlaneGeometry(.12,460),new THREE.MeshBasicMaterial({color:GOLD,transparent:true,opacity:.35}));lane.rotation.x=-Math.PI/2;lane.position.set(0,-2.18,-180);world.add(lane);
+/* floating letterform plates in the world, one per arena */
+function textPlane(txt,w=8,col='#ffffff',size=150,font='700'){const c=document.createElement('canvas');c.width=1024;c.height=256;const x=c.getContext('2d');x.fillStyle=col;x.font=`${font} ${size}px Space Grotesk, sans-serif`;x.textAlign='center';x.textBaseline='middle';x.fillText(txt,512,128);
+  const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;const m=new THREE.Mesh(new THREE.PlaneGeometry(w,w/4),new THREE.MeshBasicMaterial({map:t,transparent:true,depthWrite:false}));return m;}
+const NAMES=[null,'EASY OPTIONS','HERO ZERO','EXPIRY TRADING','STRATEGY BUILDER','THE BOARD',null];
+NAMES.forEach((n,i)=>{if(!n)return;const p=textPlane(n,16,'rgba(255,255,255,.07)',120);p.position.set(0,1.2,ARENA_Z[i]-12);world.add(p);});
+
+/* ───────── the coin: your money, travels the whole page ───────── */
+const tmpC=new THREE.Color();
+const coin=new THREE.Group();world.add(coin);
+const coinMat=new THREE.MeshStandardMaterial({color:GOLD,roughness:.25,metalness:.9,emissive:GOLD,emissiveIntensity:.25});
+const cBody=new THREE.Mesh(new THREE.CylinderGeometry(.9,.9,.16,64),coinMat);cBody.rotation.x=Math.PI/2;coin.add(cBody);
+const cRim=new THREE.Mesh(new THREE.TorusGeometry(.9,.045,16,80),new THREE.MeshStandardMaterial({color:0xfff0c2,roughness:.2,metalness:1}));coin.add(cRim);
+const cGlow=new THREE.PointLight(0xf2b544,12,10);coin.add(cGlow);
+/* face: a bitcoin-ish mark */
+const faceTex=(()=>{const c=document.createElement('canvas');c.width=256;c.height=256;const x=c.getContext('2d');x.fillStyle='#1a0f2e';x.font='700 190px Space Grotesk';x.textAlign='center';x.textBaseline='middle';x.fillText('₿',128,140);return new THREE.CanvasTexture(c);})();
+[.081,-.081].forEach((z,i)=>{const f=new THREE.Mesh(new THREE.CircleGeometry(.72,48),new THREE.MeshBasicMaterial({map:faceTex,transparent:true,opacity:.75}));f.position.z=z;if(i)f.rotation.y=Math.PI;coin.add(f);});
+let coinVal=250, coinTarget=250, coinShown=250;
+function setMoney(v,cls){coinTarget=v;const el=$('#money');el.className='v '+(cls||'');}
+
+/* ───────── particles for wins / cracks for losses ───────── */
+const PN=260,pPos=new Float32Array(PN*3),pVel=new Float32Array(PN*3),pLife=new Float32Array(PN);
+const pGeo=new THREE.BufferGeometry();pGeo.setAttribute('position',new THREE.BufferAttribute(pPos,3));
+const pMat=new THREE.PointsMaterial({color:WIN,size:.16,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false});
+const parts=new THREE.Points(pGeo,pMat);world.add(parts);
+function burst(pos,col){pMat.color.set(col);pMat.opacity=1;for(let i=0;i<PN;i++){const a=Math.random()*6.28,b=(Math.random()-.5)*3.14,s=.08+Math.random()*.22;
+  pPos[i*3]=pos.x;pPos[i*3+1]=pos.y;pPos[i*3+2]=pos.z;pVel[i*3]=Math.cos(a)*Math.cos(b)*s;pVel[i*3+1]=Math.sin(b)*s+.12;pVel[i*3+2]=Math.sin(a)*Math.cos(b)*s;pLife[i]=1;}
+  pGeo.attributes.position.needsUpdate=true;}
+function stepParts(){let any=false;for(let i=0;i<PN;i++){if(pLife[i]<=0)continue;any=true;pLife[i]-=.018;pVel[i*3+1]-=.006;pPos[i*3]+=pVel[i*3];pPos[i*3+1]+=pVel[i*3+1];pPos[i*3+2]+=pVel[i*3+2];}
+  pMat.opacity=any?Math.max(...pLife):0;if(any)pGeo.attributes.position.needsUpdate=true;}
+function winFX(pos,amt){burst(pos,WIN);setMoney(amt,'win');$('#flash').classList.remove('go');void $('#flash').offsetWidth;$('#flash').classList.add('go');document.body.classList.remove('kick');void document.body.offsetWidth;document.body.classList.add('kick');sfx.win();}
+function loseFX(pos,amt){burst(pos,LOSS);setMoney(amt,'loss');sfx.lose();}
+
+
+/* ───────── ARENA 0: hero, the payoff surface from v3, morphing through the four outlooks ───────── */
+const A0=new THREE.Group();A0.position.set(0,-1.5,ARENA_Z[0]-1);world.add(A0);
+const sGeo=new THREE.PlaneGeometry(15,9,64,40);sGeo.rotateX(-Math.PI/2);
+const sPos=sGeo.attributes.position,sCol=new Float32Array(sPos.count*3);sGeo.setAttribute('color',new THREE.BufferAttribute(sCol,3));
+const sCur=new Float32Array(sPos.count),sTgt=new Float32Array(sPos.count);
+const surf=new THREE.Mesh(sGeo,new THREE.MeshStandardMaterial({vertexColors:true,roughness:.5,metalness:.15,side:THREE.DoubleSide,transparent:true,opacity:.92}));A0.add(surf);
+const sWire=new THREE.LineSegments(new THREE.WireframeGeometry(sGeo),new THREE.LineBasicMaterial({color:0xffffff,transparent:true,opacity:.07}));surf.add(sWire);
+function payoff(k,x,t){const kk=1.4+5*t,sig=v=>1/(1+Math.exp(-v*kk)),w=.36;let v;
+  if(k==='up')v=sig(x/w)*2-1;else if(k==='down')v=sig(-x/w)*2-1;else if(k==='flat')v=1-2*sig((Math.abs(x)-w)/(w*.55));else v=2*sig((Math.abs(x)-w*.9)/(w*.7))-1;return v*(.55+.45*t);}
+const HERO_KINDS=['up','flat','down','big'];let heroK=0;
+function surfTarget(k){for(let i=0;i<sPos.count;i++){const x=sPos.getX(i)/7.5,z=sPos.getZ(i)/4.5;sTgt[i]=payoff(k,x,1-(z+1)/2)*1.3;}}
+surfTarget('up');sCur.set(sTgt);
+function paintSurf(){for(let i=0;i<sPos.count;i++){const y=sCur[i];sPos.setY(i,y);tmpC.copy(DEEP).lerp(y>=0?WIN:LOSS,.25+.75*Math.min(1,Math.abs(y)/1.1));sCol[i*3]=tmpC.r;sCol[i*3+1]=tmpC.g;sCol[i*3+2]=tmpC.b;}
+  sPos.needsUpdate=true;sGeo.attributes.color.needsUpdate=true;sGeo.computeVertexNormals();sWire.geometry.dispose();sWire.geometry=new THREE.WireframeGeometry(sGeo);}
+paintSurf();
+setInterval(()=>{heroK=(heroK+1)%HERO_KINDS.length;surfTarget(HERO_KINDS[heroK]);},3200);
+/* ───────── ARENA 1: Easy Options, the hillside. Coin rolls per outlook ───────── */
+const A1=new THREE.Group();A1.position.z=ARENA_Z[1];world.add(A1);
+const hillGeo=new THREE.PlaneGeometry(13,8,60,40);hillGeo.rotateX(-Math.PI/2);
+const hillPos=hillGeo.attributes.position,hillCol=new Float32Array(hillPos.count*3);hillGeo.setAttribute('color',new THREE.BufferAttribute(hillCol,3));
+const hill=new THREE.Mesh(hillGeo,new THREE.MeshStandardMaterial({vertexColors:true,roughness:.75,side:THREE.DoubleSide}));hill.position.y=-2.1;A1.add(hill);
+let kind='up';
+function hillShape(k,x,z){const t=(z+4)/8;/* 0 far, 1 near */const p=(x+6.5)/13;const s=v=>1/(1+Math.exp(-v*7));
+  if(k==='up')return s((p-.5)*2)*2.2-.8;if(k==='down')return s((.5-p)*2)*2.2-.8;if(k==='flat')return Math.abs(p-.5)<.28?1.0:-.8;return Math.abs(p-.5)<.3?-.8:2.0;}
+function paintHill(){for(let i=0;i<hillPos.count;i++){const x=hillPos.getX(i),z=hillPos.getZ(i),y=hillShape(kind,x,z);hillPos.setY(i,y);
+  tmpC.copy(y>=0.3?WIN:LOSS).lerp(DEEP,.55-.45*Math.min(1,Math.abs(y)/2.5));hillCol[i*3]=tmpC.r;hillCol[i*3+1]=tmpC.g;hillCol[i*3+2]=tmpC.b;}
+  hillPos.needsUpdate=true;hillGeo.attributes.color.needsUpdate=true;hillGeo.computeVertexNormals();}
+paintHill();
+const A1OUT={up:{end:525,win:true,worst:'The most you can lose is the $250 you paid.'},down:{end:525,win:true,worst:'The most you can lose is the $250 you paid.'},
+  flat:{end:190,win:true,worst:'Careful. You get $190 now, but Bybit locks $2,310 and a big move can take all of it. This one can cost more than it pays.',hot:true},
+  big:{end:850,win:true,worst:'The most you can lose is the $250 you paid. The further it moves, the more it pays.'}};
+$$('.mp').forEach(b=>b.onclick=()=>{kind=b.dataset.k;$$('.mp').forEach(x=>x.setAttribute('aria-pressed',x===b));paintHill();sfx.tick();
+  const o=A1OUT[kind];$('#worst-t').textContent=o.worst;$('#worst').classList.toggle('hot',!!o.hot);a1t=0;});
+let a1t=0;
+
+/* ───────── ARENA 2: Hero Zero, one day, one gold line ───────── */
+const A2=new THREE.Group();A2.position.z=ARENA_Z[2];world.add(A2);
+const bar=new THREE.Mesh(new THREE.BoxGeometry(12,.08,.08),new THREE.MeshBasicMaterial({color:GOLD}));bar.position.y=1.3;A2.add(bar);
+const barGlow=new THREE.Mesh(new THREE.PlaneGeometry(12,.5),new THREE.MeshBasicMaterial({color:GOLD,transparent:true,opacity:.05,side:THREE.DoubleSide}));barGlow.position.y=1.3;A2.add(barGlow);
+const barLbl=textPlane('CLEAR THIS BY TONIGHT',6,'#f2b544',74,'500');barLbl.position.set(0,2.0,0);A2.add(barLbl);
+const pad=new THREE.Mesh(new THREE.CylinderGeometry(1.6,1.8,.3,48),new THREE.MeshStandardMaterial({color:0x3a2890,roughness:.6}));pad.position.y=-2.05;A2.add(pad);
+const sunDial=new THREE.Mesh(new THREE.RingGeometry(5.2,5.35,96,1,Math.PI,Math.PI),new THREE.MeshBasicMaterial({color:WHITE,transparent:true,opacity:.3,side:THREE.DoubleSide}));sunDial.position.y=-2;A2.add(sunDial);
+const sunDot=new THREE.Mesh(new THREE.SphereGeometry(.22,24,24),new THREE.MeshBasicMaterial({color:GOLD}));A2.add(sunDot);
+
+/* ───────── ARENA 3: Expiry, the landing rings ───────── */
+const A3=new THREE.Group();A3.position.z=ARENA_Z[3];world.add(A3);
+[[5.6,LOSS,.18],[4.2,WHITE,.08],[2.8,WIN,.28],[1.4,WHITE,.08],[.55,GOLD,.9]].forEach(([r,c,o])=>{const m=new THREE.Mesh(new THREE.RingGeometry(r-.55,r,96),new THREE.MeshBasicMaterial({color:c,transparent:true,opacity:o,side:THREE.DoubleSide}));m.rotation.x=-Math.PI/2;m.position.y=-2.1;A3.add(m);});
+const tl=textPlane('$70,000',5,'rgba(255,255,255,.7)',90,'500');tl.rotation.x=-Math.PI/2;tl.position.set(0,-2.05,-7);A3.add(tl);
+const bl=textPlane('$58,000',5,'rgba(255,255,255,.7)',90,'500');bl.rotation.x=-Math.PI/2;bl.position.set(0,-2.05,7);A3.add(bl);
+const cl=textPlane('$64,000',4,'#f2b544',90,'700');cl.rotation.x=-Math.PI/2;cl.position.set(0,-2.04,0);A3.add(cl);
+/* four other players' coins, careful to reckless, land in sequence */
+const others=[[-4.1,3.2,0x9aa0a8],[3.4,-1.6,0x9aa0a8],[-1.4,1.1,0x9aa0a8],[.45,-.3,0x9aa0a8]].map(([x,z,c])=>{const m=new THREE.Mesh(new THREE.CylinderGeometry(.42,.42,.1,32),new THREE.MeshStandardMaterial({color:c,metalness:.8,roughness:.3}));m.position.set(x,9,z);m.userData.tz=z;A3.add(m);return m;});
+
+/* ───────── ARENA 4: Builder, snapping pieces ───────── */
+const A4=new THREE.Group();A4.position.z=ARENA_Z[4];world.add(A4);
+const pieces=[];const pcols=[WIN,LOSS,WIN,WHITE,LOSS,GOLD];
+for(let i=0;i<6;i++){const w=3.2-i*.28;const b=new THREE.Mesh(new THREE.BoxGeometry(w,.7,w),new THREE.MeshStandardMaterial({color:pcols[i],roughness:.45,metalness:.2}));
+  b.add(new THREE.LineSegments(new THREE.EdgesGeometry(b.geometry),new THREE.LineBasicMaterial({color:0x1a0f4a,transparent:true,opacity:.5})));b.userData.rest=-1.7+i*.78;b.position.y=12;A4.add(b);pieces.push(b);}
+const WORST4=['−$250','−$250','−$250','−$610','−$610','−$2,310'];
+
+/* ───────── ARENA 5: the board, a tunnel of strikes ───────── */
+const A5=new THREE.Group();A5.position.z=ARENA_Z[5];world.add(A5);
+const SPOT=64000;for(let s=52000,i=0;s<=76000;s+=1000,i++){const z=-(i-12)*1.4,m=Math.abs(s-SPOT)/SPOT,L=Math.max(.06,Math.exp(-m*m*260)*(s%5000===0?1:.55)),sp=1.2+(1-L)*2.2;
+  const mk=(c,x)=>{const b=new THREE.Mesh(new THREE.BoxGeometry(.5,.15+L*1.6,.3),new THREE.MeshBasicMaterial({color:c,transparent:true,opacity:.25+L*.75}));b.position.set(x,0,z);A5.add(b);};
+  mk(WIN,-(2.6+sp/2));mk(LOSS,2.6+sp/2);
+  const ring=new THREE.Mesh(new THREE.RingGeometry(4.6,4.66,64),new THREE.MeshBasicMaterial({color:WHITE,transparent:true,opacity:.05+L*.14,side:THREE.DoubleSide}));ring.position.z=z;A5.add(ring);
+  if(s%4000===0){const t=textPlane('$'+s.toLocaleString(),4,'rgba(255,255,255,.7)',86,'500');t.position.set(0,-1.7,z);A5.add(t);}}
+const spotRing=new THREE.Mesh(new THREE.RingGeometry(4.4,4.9,64),new THREE.MeshBasicMaterial({color:GOLD,transparent:true,opacity:.6,side:THREE.DoubleSide}));A5.add(spotRing);
+
+/* ───────── ARENA 6: close, a gravity well of coins ───────── */
+const A6=new THREE.Group();A6.position.z=ARENA_Z[6];world.add(A6);
+const WN=700,wPos=new Float32Array(WN*3),wVel=new Float32Array(WN*3);for(let i=0;i<WN;i++){wPos[i*3]=(Math.random()-.5)*30;wPos[i*3+1]=(Math.random()-.5)*14;wPos[i*3+2]=(Math.random()-.5)*10;}
+const wGeo=new THREE.BufferGeometry();wGeo.setAttribute('position',new THREE.BufferAttribute(wPos,3));A6.add(new THREE.Points(wGeo,new THREE.PointsMaterial({color:GOLD,size:.14,transparent:true,opacity:.8,blending:THREE.AdditiveBlending,depthWrite:false})));
+
+/* ───────── scroll → progress → camera + choreography ───────── */
+const SECT=7,STAGES=$$('.stage');let prog=0,progT=0;
+addEventListener('scroll',()=>{const max=document.body.scrollHeight-innerHeight;progT=clamp(scrollY/max,0,1);},{passive:true});
+const PLATES=['','EASY OPTIONS','HERO ZERO','EXPIRY TRADING','STRATEGY BUILDER','THE BOARD',''];
+const PLATE_SUB=['','A week, your way','One day, one line','Friday, the landing','Your pieces','Live from Bybit',''];
+let lastSect=-1,a2t=0,a3t=0,a4t=0,winDone={},loseDone={};
+const camPos=new THREE.Vector3(0,2.2,9),camLook=new THREE.Vector3(0,0,0);
+const CAM_Y=[4.6,4.6,4.2,5.4,4.6,.9,4.6],LOOK_Y=[-.4,-.4,-.2,-.9,-.2,.2,-.4];
+
+function frame(){
+  const now=performance.now()*.001;
+  prog+=(progT-prog)*.07;
+  const f=prog*(SECT-1),sect=Math.min(SECT-1,Math.floor(f)),u=f-sect,e=smooth(clamp((u-.55)/.45,0,1));/* dwell, then fly */
+  /* camera glides down the track; each arena gets a settled shot in its middle third */
+  const zA=ARENA_Z[sect],zB=ARENA_Z[Math.min(SECT-1,sect+1)];
+  const sn=Math.min(SECT-1,sect+1);camPos.z=lerp(zA,zB,e)+12.5;camPos.y=lerp(CAM_Y[sect],CAM_Y[sn],e)+Math.sin(now*.4)*.15;camPos.x=Math.sin(now*.25)*.5;
+  camLook.set(0,lerp(LOOK_Y[sect],LOOK_Y[sn],e),lerp(zA,zB,e)-3);cam.position.copy(camPos);cam.lookAt(camLook);
+  /* HUD stage: active in the settled part of each section */
+  const settled=u<.55;STAGES.forEach((s,i)=>s.classList.toggle('on',i===sect&&(settled||i===SECT-1)));
+  $('#plate').innerHTML=(PLATE_SUB[sect]||'GRAVITAS')+'<b>'+(PLATES[sect]||'&nbsp;')+'</b>';
+  $('#worst').classList.toggle('on',sect>=1&&sect<=4&&settled);
+  if(sect!==lastSect){lastSect=sect;a2t=a3t=a4t=0;if(sect!==1)a1t=0;sfx.tick();}
+
+  /* the coin rides the track ahead of the camera, and performs in each arena */
+  const cz=lerp(zA,zB,e);let cx=0,cy=0;coin.rotation.y+=.02+e*(1-e)*.5;coin.rotation.x=0;
+  if(sect===0){cx=4.6;cy=Math.sin(now*1.3)*.25+.3;A0.rotation.y=Math.sin(now*.15)*.35;let mv=false;
+    for(let i=0;i<sPos.count;i++){const d=sTgt[i]-sCur[i];if(Math.abs(d)>1e-4){sCur[i]+=d*.07;mv=true;}}if(mv)paintSurf();}
+  if(sect===1){/* rolls across the hill per outlook */a1t=Math.min(1,a1t+.006);const p=a1t;cx=lerp(-5.4,5.4,p);cy=hillShape(kind,cx,0)-2.1+.95;coin.rotation.x=-p*14;coin.rotation.y=0;
+    if(a1t>=1&&!winDone['a1'+kind]){winDone['a1'+kind]=true;const o=A1OUT[kind];winFX(new THREE.Vector3(cx,cy,ARENA_Z[1]),o.end);}
+    if(a1t<1&&coinTarget!==250){setMoney(250,'');} }
+  if(sect===2){/* launches at the line as the sun crosses the day */a2t=Math.min(1,a2t+.0075);const p=a2t;const sunA=Math.PI-p*Math.PI;sunDot.position.set(Math.cos(sunA)*5.3,-2+Math.sin(sunA)*5.3,0);
+    cy=-1.7+Math.pow(p,1.6)*4.6;coin.rotation.x=-p*9;coin.rotation.y=0;barLbl.position.y=2.0+Math.sin(now*2)*.05;
+    if(p>.62&&!winDone.a2){winDone.a2=true;bar.material.color.set(WIN);barGlow.material.color.set(WIN);winFX(new THREE.Vector3(0,1.3,ARENA_Z[2]),500);}
+    if(p<.62&&coinTarget!==250){setMoney(250,'');bar.material.color.set(GOLD);barGlow.material.color.set(GOLD);}}
+  if(sect===3){/* others land careful→reckless, then yours drops near the eye */a3t=Math.min(1,a3t+.0055);const p=a3t;
+    others.forEach((m,i)=>{const s=clamp((p-.1-i*.14)/.22,0,1),ee=1-Math.pow(1-s,3);m.position.y=lerp(9,-2.0,ee);m.rotation.z=(1-s)*.6;});
+    const s=clamp((p-.72)/.22,0,1),ee=1-Math.pow(1-s,3);cx=.3;cy=lerp(7,-1.9,ee)+2.1;coin.rotation.x=(1-s)*1.2;
+    if(s>=1&&!winDone.a3){winDone.a3=true;winFX(new THREE.Vector3(.3,-1.9,ARENA_Z[3]),610);}if(s<1&&coinTarget!==250)setMoney(250,'');}
+  if(sect===4){/* pieces snap in; each one rewrites the worst case */a4t=Math.min(1,a4t+.0065);const p=a4t;let n=0;
+    pieces.forEach((b,i)=>{const s=clamp((p-i*.13)/.16,0,1),ee=1-Math.pow(1-s,3);b.position.y=lerp(12,b.userData.rest,ee);if(s>=1)n=i+1;b.rotation.y=Math.sin(now*.5+i)*.03;});
+    if(n>0){const w=WORST4[n-1];const hot=n>=4;$('#worst-t').textContent='Worst case '+w+(hot?'. This build can cost more than you paid.':'. Loss capped.');$('#worst').classList.toggle('hot',hot);}
+    cx=4.5;cy=1.4+Math.sin(now*1.2)*.2;A4.rotation.y=now*.18;}
+  if(sect===5){cx=0;cy=.5;A5.rotation.z=Math.sin(now*.3)*.05;}
+  if(sect===6){cx=3.8;cy=Math.sin(now*1.1)*.3-.6;const t=now;for(let i=0;i<WN;i++){const ix=i*3,x=wPos[ix],y=wPos[ix+1],d=Math.hypot(x,y)+.001,pull=.012/(d*d*.25+.3);
+      wVel[ix]+=-x/d*pull+Math.sin(t+i)*.0006;wVel[ix+1]+=-y/d*pull+Math.cos(t*1.3+i)*.0006;wVel[ix]*=.98;wVel[ix+1]*=.98;wPos[ix]+=wVel[ix];wPos[ix+1]+=wVel[ix+1];
+      if(d<.5){const a=Math.random()*6.28,r=11+Math.random()*5;wPos[ix]=Math.cos(a)*r;wPos[ix+1]=Math.sin(a)*r*.5;wVel[ix]=wVel[ix+1]=0;}}
+    wGeo.attributes.position.needsUpdate=true;}
+  coin.position.set(cx,cy,cz);cGlow.intensity=10+Math.sin(now*4)*3;
+  /* money counter rolls to target */
+  coinShown+=(coinTarget-coinShown)*.12;$('#money').textContent=money(Math.round(coinShown));
+  stepParts();comp.render();requestAnimationFrame(frame);
+}
+frame();
+</script>
+</body>
+</html>

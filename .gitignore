@@ -1,0 +1,4 @@
+index.v*.html
+index.new.html
+_*.html
+.DS_Store
