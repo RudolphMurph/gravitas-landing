@@ -154,7 +154,7 @@ function makeCoin(r,th){const g=new THREE.Group();
   const faceMat=new THREE.MeshStandardMaterial({map:ASSETS[0].tex,transparent:true,metalness:.85,roughness:.42,envMapIntensity:.9,color:0xffffff});
   const faces=[1,-1].map(s=>{const f=new THREE.Mesh(new THREE.CircleGeometry(r*.8,72),faceMat);f.position.z=s*(th/2+.004);if(s<0)f.rotation.y=Math.PI;g.add(f);return f;});
   g.userData={body,rim,faceMat,faces,r};return g;}
-const coins=[];let asset=0;
+const coins=[];/* only the hero coin changes asset; every other coin stays Bitcoin, like the prices around it */let asset=0;
 function setAsset(i){asset=i;const a=ASSETS[i];coins.forEach(c=>{c.userData.tb=new THREE.Color(a.body);c.userData.tr=new THREE.Color(a.rim);c.userData.faceMat.map=a.tex;c.userData.faceMat.needsUpdate=true;});
   $('#em').style.color=a.accent;}
 function tweenCoins(){coins.forEach(c=>{const u=c.userData;if(u.tb){u.body.color.lerp(u.tb,.06);u.rim.color.lerp(u.tr,.06);}});}
@@ -196,7 +196,7 @@ const L=mk(-.95);
 const barMat=new THREE.MeshStandardMaterial({color:GOLD,emissive:GOLD,emissiveIntensity:1.4,metalness:.6,roughness:.3});
 const bar=new THREE.Mesh(new THREE.BoxGeometry(19,.06,.06),barMat);bar.position.y=1.15;L.add(bar);
 const barLbl=textPlane(LINE_TXT+' by tonight',4.6,'rgba(242,181,68,.85)',74,'500');barLbl.position.set(4.0,1.62,0);L.add(barLbl);
-const chip2=makeCoin(1.05,.16);coins.push(chip2);L.add(chip2);const chipL=new THREE.PointLight(0xf2b544,0,6);chip2.add(chipL);
+const chip2=makeCoin(1.05,.16);L.add(chip2);const chipL=new THREE.PointLight(0xf2b544,0,6);chip2.add(chipL);
 
 /* ───────── SECTION 3: the landing. A dish of brushed metal rings. Your coin settles into it ───────── */
 const R=mk(-1.1);R.rotation.x=-.78;R.userData.s0=.74;
@@ -205,7 +205,7 @@ const rings=ringDefs.map(([r,c,e],i)=>{const disc=new THREE.Mesh(new THREE.Cylin
   const edge=new THREE.Mesh(new THREE.TorusGeometry(r,.045,12,160),new THREE.MeshStandardMaterial({color:c,emissive:c,emissiveIntensity:.5,metalness:.4,roughness:.4}));edge.rotation.x=Math.PI/2;edge.position.y=-i*.11+.07;R.add(edge);return {edge,base:e};});
 const l1=textPlane(fmt(levels(SPOT).hi),3.2,'rgba(245,245,247,.55)',90,'500');l1.rotation.x=-Math.PI/2;l1.position.set(0,.09,-4.8);R.add(l1);
 const l2=textPlane(fmt(levels(SPOT).lo),3.2,'rgba(245,245,247,.55)',90,'500');l2.rotation.x=-Math.PI/2;l2.position.set(0,.09,4.8);R.add(l2);
-const chip3=makeCoin(.95,.15);coins.push(chip3);chip3.rotation.x=Math.PI/2;R.add(chip3);
+const chip3=makeCoin(.95,.15);chip3.rotation.x=Math.PI/2;R.add(chip3);
 
 /* ───────── SECTION 4: six pieces of dark glass, sliding into a stack with weight ───────── */
 const B=mk(-.2);B.rotation.x=.14;
@@ -225,7 +225,7 @@ const boardLbls=[];for(let i=0;i<=24;i++){const z=-(i-12)*1.6,m=Math.abs(i-12)/6
 const spotRing=new THREE.Mesh(new THREE.TorusGeometry(5.0,.06,10,160),new THREE.MeshStandardMaterial({color:GOLD,emissive:GOLD,emissiveIntensity:1.2}));T.add(spotRing);
 
 /* ───────── SECTION 6: the coin comes back, and the button ───────── */
-const C=mk(-1.3);const closeCoin=makeCoin(1.9,.28);closeCoin.position.x=3.4;coins.push(closeCoin);C.add(closeCoin);
+const C=mk(-1.3);const closeCoin=makeCoin(1.9,.28);closeCoin.position.x=3.4;C.add(closeCoin);
 setAsset(0);
 function applyPrice(S){if(!(S>1000))return;SPOT=S;const L=levels(S);LINE_TXT=fmt(L.line);retext(barLbl,LINE_TXT+' by tonight');retext(l1,fmt(L.hi));retext(l2,fmt(L.lo));boardLbls.forEach(t=>retext(t,fmt(L.spot-12000+t.userData.row*1000)));}
 window.__price=applyPrice;
