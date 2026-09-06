@@ -137,6 +137,11 @@ function textPlane(txt,w,col,size=150,font='500',fam='Space Grotesk, sans-serif'
   const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=8;const m=new THREE.Mesh(new THREE.PlaneGeometry(w,w/4),new THREE.MeshBasicMaterial({map:t,transparent:true,depthWrite:false}));m.userData={c,col,size,font,fam,txt};return m;}
 function retext(m,txt){const u=m.userData;if(u.txt===txt)return;u.txt=txt;paintText(u.c,txt,u.col,u.size,u.font,u.fam);m.material.map.needsUpdate=true;}
 
+/* ───────── every price on the page derives from live BTC spot; $80k until the fetch lands ───────── */
+let SPOT=80000;const fmt=v=>'$'+Math.round(v).toLocaleString('en-US');
+function levels(S){const k=Math.round(S/1000)*1000;return {spot:k,line:Math.round(S*1.02/500)*500,hi:k+6000,lo:k-6000};}
+let LINE_TXT=fmt(levels(SPOT).line);
+
 /* ───────── coins: heavy, metal, with the asset's mark on the face ───────── */
 function drawFace(a){if(!a.cv){a.cv=document.createElement('canvas');a.cv.width=a.cv.height=512;a.tex=new THREE.CanvasTexture(a.cv);a.tex.colorSpace=THREE.SRGBColorSpace;a.tex.anisotropy=8;}
   const x=a.cv.getContext('2d');x.clearRect(0,0,512,512);x.fillStyle=a.glyph;x.font=`700 ${a.g.length>1?300:360}px Space Grotesk, Inter, sans-serif`;x.textAlign='center';x.textBaseline='middle';x.fillText(a.g,256,276);a.tex.needsUpdate=true;}
@@ -190,7 +195,7 @@ $$('.mp').forEach(b=>b.onclick=()=>{kind=b.dataset.k;$$('.mp').forEach(x=>x.setA
 const L=mk(-.95);
 const barMat=new THREE.MeshStandardMaterial({color:GOLD,emissive:GOLD,emissiveIntensity:1.4,metalness:.6,roughness:.3});
 const bar=new THREE.Mesh(new THREE.BoxGeometry(19,.06,.06),barMat);bar.position.y=1.15;L.add(bar);
-const barLbl=textPlane('$64,000 by tonight',4.6,'rgba(242,181,68,.85)',74,'500');barLbl.position.set(4.0,1.62,0);L.add(barLbl);
+const barLbl=textPlane(LINE_TXT+' by tonight',4.6,'rgba(242,181,68,.85)',74,'500');barLbl.position.set(4.0,1.62,0);L.add(barLbl);
 const chip2=makeCoin(1.05,.16);coins.push(chip2);L.add(chip2);const chipL=new THREE.PointLight(0xf2b544,0,6);chip2.add(chipL);
 
 /* ───────── SECTION 3: the landing. A dish of brushed metal rings. Your coin settles into it ───────── */
@@ -198,8 +203,8 @@ const R=mk(-1.1);R.rotation.x=-.78;R.userData.s0=.74;
 const ringDefs=[[5.4,LOSS,.5],[4.25,WHITE,.08],[3.1,WIN,.7],[1.95,WHITE,.08],[.85,GOLD,1.2]];
 const rings=ringDefs.map(([r,c,e],i)=>{const disc=new THREE.Mesh(new THREE.CylinderGeometry(r,r,.14,128),new THREE.MeshStandardMaterial({color:0x2a2a34,metalness:.8,roughness:.3,envMapIntensity:1.0}));disc.position.y=-i*.11;R.add(disc);
   const edge=new THREE.Mesh(new THREE.TorusGeometry(r,.045,12,160),new THREE.MeshStandardMaterial({color:c,emissive:c,emissiveIntensity:.5,metalness:.4,roughness:.4}));edge.rotation.x=Math.PI/2;edge.position.y=-i*.11+.07;R.add(edge);return {edge,base:e};});
-const l1=textPlane('$70,000',3.2,'rgba(245,245,247,.55)',90,'500');l1.rotation.x=-Math.PI/2;l1.position.set(0,.09,-4.8);R.add(l1);
-const l2=textPlane('$58,000',3.2,'rgba(245,245,247,.55)',90,'500');l2.rotation.x=-Math.PI/2;l2.position.set(0,.09,4.8);R.add(l2);
+const l1=textPlane(fmt(levels(SPOT).hi),3.2,'rgba(245,245,247,.55)',90,'500');l1.rotation.x=-Math.PI/2;l1.position.set(0,.09,-4.8);R.add(l1);
+const l2=textPlane(fmt(levels(SPOT).lo),3.2,'rgba(245,245,247,.55)',90,'500');l2.rotation.x=-Math.PI/2;l2.position.set(0,.09,4.8);R.add(l2);
 const chip3=makeCoin(.95,.15);coins.push(chip3);chip3.rotation.x=Math.PI/2;R.add(chip3);
 
 /* ───────── SECTION 4: six pieces of dark glass, sliding into a stack with weight ───────── */
@@ -212,16 +217,20 @@ const wl=textPlane('MAX LOSS  −$250',6.2,'rgba(245,245,247,.75)',54,'500','Jet
 
 /* ───────── SECTION 5: the board. A tunnel of live strikes you dolly through ───────── */
 const T=mk(.3);
-const SPOT=64000;for(let s=52000,i=0;s<=76000;s+=1000,i++){const z=-(i-12)*1.6,m=Math.abs(s-SPOT)/SPOT,Lv=Math.max(.06,Math.exp(-m*m*260)*(s%5000===0?1:.55)),sp=1.4+(1-Lv)*2.4;
+const boardLbls=[];for(let i=0;i<=24;i++){const z=-(i-12)*1.6,m=Math.abs(i-12)/60,Lv=Math.max(.06,Math.exp(-m*m*260)*((i-12)%5===0?1:.55)),sp=1.4+(1-Lv)*2.4;
   const mkb=(c,x)=>{const b=new THREE.Mesh(new THREE.BoxGeometry(.55,.2+Lv*1.9,.34),new THREE.MeshStandardMaterial({color:c,emissive:c,emissiveIntensity:.15+Lv*.9,metalness:.5,roughness:.35}));b.position.set(x,0,z);T.add(b);};
   mkb(WIN,-(3+sp/2));mkb(LOSS,3+sp/2);
   const ring=new THREE.Mesh(new THREE.TorusGeometry(5.1,.018,8,120),new THREE.MeshBasicMaterial({color:WHITE,transparent:true,opacity:.04+Lv*.16}));ring.position.z=z;T.add(ring);
-  if(s%4000===0){const t=textPlane('$'+s.toLocaleString(),3.6,'rgba(245,245,247,.6)',86,'500');t.position.set(0,-1.9,z);T.add(t);}}
+  if(i%4===0){const t=textPlane(fmt(levels(SPOT).spot-12000+i*1000),3.6,'rgba(245,245,247,.6)',86,'500');t.position.set(0,-1.9,z);t.userData.row=i;T.add(t);boardLbls.push(t);}}
 const spotRing=new THREE.Mesh(new THREE.TorusGeometry(5.0,.06,10,160),new THREE.MeshStandardMaterial({color:GOLD,emissive:GOLD,emissiveIntensity:1.2}));T.add(spotRing);
 
 /* ───────── SECTION 6: the coin comes back, and the button ───────── */
 const C=mk(-1.3);const closeCoin=makeCoin(1.9,.28);closeCoin.position.x=3.4;coins.push(closeCoin);C.add(closeCoin);
 setAsset(0);
+function applyPrice(S){if(!(S>1000))return;SPOT=S;const L=levels(S);LINE_TXT=fmt(L.line);retext(barLbl,LINE_TXT+' by tonight');retext(l1,fmt(L.hi));retext(l2,fmt(L.lo));boardLbls.forEach(t=>retext(t,fmt(L.spot-12000+t.userData.row*1000)));}
+window.__price=applyPrice;
+fetch('https://api.bybit.com/v5/market/tickers?category=spot&symbol=BTCUSDT').then(r=>r.json()).then(j=>applyPrice(+j.result.list[0].lastPrice))
+  .catch(()=>fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd').then(r=>r.json()).then(j=>applyPrice(+j.bitcoin.usd)).catch(()=>{}));
 
 /* ───────── scroll: one long scrub. Every object arrives from the dark, holds, and lifts away ───────── */
 const SECT=7,STAGES=$$('.stage');let prog=0,progT=0;
@@ -253,7 +262,7 @@ function frame(){const t=performance.now(),dt=Math.min(.05,(t-last)/1000);last=t
   /* 2 the line */
   {const r=place(L,2,f);if(r){const e=eInOutCubic(r.s);const y=lerp(-2.0,3.3,e);chip2.position.set(0,y,.6);chip2.rotation.y=Math.sin(now*.6)*.35;chip2.rotation.x=-e*1.2;
     const over=clamp((y-1.15)/.5,0,1);barMat.color.copy(GOLD).lerp(WIN,over);barMat.emissive.copy(GOLD).lerp(WIN,over);chipL.intensity=2.5+over*14;chipL.color.copy(GOLD).lerp(WIN,over);
-    retext(barLbl,over>=1?'$64,000 · cleared · ×2':'$64,000 by tonight');shadowS=Math.max(shadowS,r.pres*.7);}}
+    retext(barLbl,over>=1?LINE_TXT+' · cleared · ×2':LINE_TXT+' by tonight');shadowS=Math.max(shadowS,r.pres*.7);}}
   /* 3 the landing */
   {const r=place(R,3,f);if(r){R.rotation.x=-.78+r.u*.25;R.rotation.z=Math.sin(now*.15)*.04;
     const drop=clamp((r.s-.12)/.7,0,1);const y=lerp(7,.62,eInQuad(drop));chip3.position.set(.25,y,.15);chip3.rotation.z=(1-drop)*.5;
