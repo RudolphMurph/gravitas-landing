@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Gravitas · Bet on Bitcoin</title>
-<meta name="description" content="Say where it goes by Friday. Know the worst case before you pay.">
+<title>Gravitas · Crypto options, rebuilt by traders</title>
+<meta name="description" content="Bitcoin, Ethereum, Solana and Gold options without the option chain. Pick the move, pick the day, pay once.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;500;700&family=Inter:wght@400;500&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
@@ -34,13 +34,15 @@ nav>*{pointer-events:auto}
 .hud{position:fixed;inset:0;z-index:3;pointer-events:none}
 .stage{position:absolute;left:0;right:0;top:11vh;text-align:center;opacity:0;pointer-events:none;will-change:transform,opacity;padding:0 20px}
 .stage.mid{top:22vh}
-.stage h1,.stage h2{font-family:var(--disp);font-weight:700;letter-spacing:-.045em;line-height:.96;margin:0;font-size:clamp(44px,7.6vw,112px)}
+.stage h1,.stage h2{font-family:var(--disp);font-weight:700;letter-spacing:-.045em;line-height:.96;margin:0;font-size:clamp(42px,7vw,104px)}
+.stage h1{font-size:clamp(40px,6.3vw,92px)}
+.eye{font-family:var(--mono);font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:var(--gold);margin:0 0 20px;opacity:.9}
 .stage em{font-style:normal;color:var(--gold);transition:color .8s}
 .roll{display:inline-block;overflow:hidden;vertical-align:bottom;line-height:.96;padding-bottom:.06em;margin-bottom:-.06em}
 .roll span{display:inline-block;transition:transform .62s cubic-bezier(.7,0,.2,1),opacity .4s;will-change:transform}
 .roll span.out{transform:translateY(-112%);opacity:0}
 .roll span.pre{transition:none;transform:translateY(112%);opacity:0}
-.stage .sub{font-size:clamp(15px,1.35vw,19px);color:var(--ink2);margin:20px auto 0;font-weight:400;max-width:680px;line-height:1.45}
+.stage .sub{font-size:clamp(14px,1.2vw,17px);color:var(--ink2);margin:18px auto 0;font-weight:400;max-width:620px;line-height:1.5;letter-spacing:-.005em}
 .stage .cta{margin-top:30px;display:inline-flex}
 .pills{display:inline-flex;gap:8px;margin-top:26px;flex-wrap:wrap;justify-content:center}
 .mp{border:1.5px solid var(--line);border-radius:999px;padding:11px 20px;font-size:14px;color:var(--ink);cursor:pointer;background:rgba(255,255,255,.04);backdrop-filter:blur(10px);font-family:var(--body);font-weight:500;transition:all .5s cubic-bezier(.16,1,.3,1)}
@@ -49,13 +51,13 @@ nav>*{pointer-events:auto}
 .small{font-size:12px!important;color:var(--ink3)!important;margin-top:22px!important}
 
 /* readouts, bottom */
-.plate{position:fixed;left:32px;bottom:34px;z-index:4;font-family:var(--mono);font-size:11px;letter-spacing:.24em;color:var(--ink3);pointer-events:none;transition:opacity .5s}
-.worst{position:fixed;left:50%;bottom:34px;transform:translateX(-50%);z-index:4;font-size:13px;color:var(--ink2);pointer-events:none;opacity:0;transition:opacity .6s;display:flex;gap:9px;align-items:center;white-space:nowrap}
-.worst.on{opacity:1}.worst i{width:6px;height:6px;border-radius:50%;background:var(--win)}.worst.hot i{background:var(--loss)}.worst.hot{color:#ffc9d2}
+.rail{position:fixed;right:34px;top:50%;transform:translateY(-50%);z-index:4;display:flex;flex-direction:column;gap:9px;pointer-events:none}
+.rail i{display:block;width:4px;height:4px;border-radius:2px;background:var(--ink3);transition:all .6s cubic-bezier(.16,1,.3,1)}
+.rail i.on{background:var(--gold);height:22px;box-shadow:0 0 12px rgba(242,181,68,.6)}
 .hint{position:fixed;bottom:34px;right:32px;z-index:4;font-family:var(--mono);font-size:10px;letter-spacing:.22em;color:var(--ink3);display:flex;align-items:center;gap:10px;pointer-events:none;transition:opacity .5s}
 .hint i{width:1px;height:26px;background:linear-gradient(var(--ink3),transparent);display:block;animation:hint 2.4s ease-in-out infinite}
 @keyframes hint{0%,100%{transform:scaleY(.4);opacity:.3}50%{transform:scaleY(1);opacity:1}}
-@media(max-width:800px){.plate{left:20px}.hint{display:none}nav{padding:16px 20px}.worst{font-size:12px;max-width:92vw;white-space:normal;text-align:center}}
+@media(max-width:800px){.rail{right:18px}.hint{display:none}nav{padding:16px 20px}}
 </style>
 </head>
 <body>
@@ -68,18 +70,17 @@ nav>*{pointer-events:auto}
 </nav>
 
 <div class="hud">
-  <div class="stage" id="s0"><h1>Bet on <em class="roll" id="em"><span id="w">Bitcoin.</span></em></h1><p class="sub">Say where it goes by Friday. Know the worst case before you pay.</p></div>
-  <div class="stage" id="s1"><h2>Which way?</h2>
-    <div class="pills"><button class="mp" data-k="up" aria-pressed="true">Up</button><button class="mp" data-k="down" aria-pressed="false">Down</button><button class="mp" data-k="flat" aria-pressed="false">Sideways</button><button class="mp" data-k="big" aria-pressed="false">Big swing</button></div></div>
-  <div class="stage" id="s2"><h2>Clear the line <em>today.</em></h2><p class="sub">Small ticket. Doubles if it makes it. Gone if it doesn't.</p></div>
-  <div class="stage" id="s3"><h2>Call the <em>landing.</em></h2><p class="sub">Where does it close on Friday? Closer pays more.</p></div>
-  <div class="stage" id="s4"><h2>Build your <em>own.</em></h2><p class="sub">Six pieces. The worst case rewrites as you go.</p></div>
-  <div class="stage" id="s5"><h2>The <em>board.</em></h2><p class="sub">Every price Bybit is trading, live.</p></div>
-  <div class="stage mid" id="s6"><h2>You already have<br>an <em>opinion.</em></h2><p class="sub">Now it can pay you.</p><a class="btn gold cta" href="#">Get started</a><p class="sub small">Bets can and often do lose everything you put in. Not financial advice.</p></div>
+  <div class="stage" id="s0"><h1><em class="roll" id="em"><span id="w">Bitcoin.</span></em> Up or down.<br>Your call.</h1><p class="sub">Options without the option chain. Pick the move. Pick the day. Pay once.</p></div>
+  <div class="stage" id="s1"><p class="eye">01 · Easy Options</p><h2>Four moves. One tap.</h2><p class="sub">Today, tomorrow, this week or this month. We pick the strikes.</p>
+    <div class="pills"><button class="mp" data-k="up" aria-pressed="true">Up</button><button class="mp" data-k="down" aria-pressed="false">Down</button><button class="mp" data-k="flat" aria-pressed="false">Sideways</button><button class="mp" data-k="big" aria-pressed="false">Volatile</button></div></div>
+  <div class="stage" id="s2"><p class="eye">02 · Hero Zero</p><h2>Double or nothing.<br>By tonight.</h2><p class="sub">One small stake on today's move. Over the line, it doubles.</p></div>
+  <div class="stage" id="s3"><p class="eye">03 · Expiry Trading</p><h2>Call the close.</h2><p class="sub">Say where it lands at expiry. Tighter call, bigger payout.</p></div>
+  <div class="stage" id="s4"><p class="eye">04 · Strategy Builder</p><h2>Your strikes. Your payoff.</h2><p class="sub">Every leg on the live chain. Worst case rewrites as you build.</p></div>
+  <div class="stage" id="s5"><p class="eye">05 · The Board</p><h2>Every strike, live.</h2><p class="sub">Real bids. Real asks. Never a dead quote.</p></div>
+  <div class="stage mid" id="s6"><p class="eye">Gravitas</p><h2>Crypto options,<br>rebuilt by <em>traders.</em></h2><p class="sub">Your Bybit account. Your keys. We never hold your money.</p><a class="btn gold cta" href="#">Place your first ticket</a><p class="sub small">Options can lose everything you put in. Not financial advice.</p></div>
 </div>
 
-<div class="plate" id="plate">GRAVITAS</div>
-<div class="worst" id="worst"><i></i><span id="worst-t">The most you can lose is the $250 you paid.</span></div>
+<div class="rail" id="rail"></div>
 <div class="hint" id="hint"><i></i>SCROLL</div>
 <div id="track"></div>
 
@@ -128,8 +129,10 @@ const floor=new THREE.Mesh(new THREE.CircleGeometry(60,64),new THREE.MeshStandar
 const shTex=(()=>{const c=document.createElement('canvas');c.width=c.height=256;const x=c.getContext('2d');const g=x.createRadialGradient(128,128,10,128,128,128);g.addColorStop(0,'rgba(0,0,0,.85)');g.addColorStop(1,'rgba(0,0,0,0)');x.fillStyle=g;x.fillRect(0,0,256,256);return new THREE.CanvasTexture(c);})();
 const shadow=new THREE.Mesh(new THREE.PlaneGeometry(9,9),new THREE.MeshBasicMaterial({map:shTex,transparent:true,depthWrite:false}));shadow.rotation.x=-Math.PI/2;shadow.position.y=-3.19;scene.add(shadow);
 
-function textPlane(txt,w,col,size=150,font='500'){const c=document.createElement('canvas');c.width=1024;c.height=256;const x=c.getContext('2d');x.fillStyle=col;x.font=`${font} ${size}px Space Grotesk, sans-serif`;x.textAlign='center';x.textBaseline='middle';x.fillText(txt,512,128);
-  const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=8;return new THREE.Mesh(new THREE.PlaneGeometry(w,w/4),new THREE.MeshBasicMaterial({map:t,transparent:true,depthWrite:false}));}
+function paintText(c,txt,col,size,font,fam){const x=c.getContext('2d');x.clearRect(0,0,1024,256);x.fillStyle=col;x.font=`${font} ${size}px ${fam}`;x.textAlign='center';x.textBaseline='middle';x.fillText(txt,512,128);}
+function textPlane(txt,w,col,size=150,font='500',fam='Space Grotesk, sans-serif'){const c=document.createElement('canvas');c.width=1024;c.height=256;paintText(c,txt,col,size,font,fam);
+  const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=8;const m=new THREE.Mesh(new THREE.PlaneGeometry(w,w/4),new THREE.MeshBasicMaterial({map:t,transparent:true,depthWrite:false}));m.userData={c,col,size,font,fam,txt};return m;}
+function retext(m,txt){const u=m.userData;if(u.txt===txt)return;u.txt=txt;paintText(u.c,txt,u.col,u.size,u.font,u.fam);m.material.map.needsUpdate=true;}
 
 /* ───────── coins: heavy, metal, with the asset's mark on the face ───────── */
 function drawFace(a){if(!a.cv){a.cv=document.createElement('canvas');a.cv.width=a.cv.height=512;a.tex=new THREE.CanvasTexture(a.cv);a.tex.colorSpace=THREE.SRGBColorSpace;a.tex.anisotropy=8;}
@@ -150,7 +153,7 @@ function tweenCoins(){coins.forEach(c=>{const u=c.userData;if(u.tb){u.body.color
 
 /* ───────── SECTION 0: the hero coin, huge. Rolls to the next asset while the headline rolls with it ───────── */
 const mk=(y0)=>{const g=new THREE.Group();g.userData.y0=y0;scene.add(g);return g;};
-const H=mk(-.75);const hero=makeCoin(2.35,.32);coins.push(hero);H.add(hero);
+const H=mk(-1.15);const hero=makeCoin(2.15,.3);coins.push(hero);H.add(hero);
 let rollT=1,swapped=true,nextRoll=3.6;
 function rollWord(a){const w=$('#w');w.classList.add('out');setTimeout(()=>{w.textContent=a.w;w.classList.remove('out');w.classList.add('pre');void w.offsetWidth;w.classList.remove('pre');},380);}
 
@@ -168,17 +171,14 @@ function surfTarget(k){for(let i=0;i<sPos.count;i++){const x=sPos.getX(i)/5.75,z
 function paintSurf(){for(let i=0;i<sPos.count;i++){const y=sCur[i];sPos.setY(i,y);tmpC.copy(DARK).lerp(y>=0?WIN:LOSS,.12+.62*Math.min(1,Math.abs(y)/1.2));sCol[i*3]=tmpC.r;sCol[i*3+1]=tmpC.g;sCol[i*3+2]=tmpC.b;}
   sPos.needsUpdate=true;sGeo.attributes.color.needsUpdate=true;sGeo.computeVertexNormals();sWire.geometry.dispose();sWire.geometry=new THREE.WireframeGeometry(sGeo);}
 surfTarget('up');sCur.set(sTgt);paintSurf();
-const WORST1={up:['The most you can lose is the $250 you paid.',false],down:['The most you can lose is the $250 you paid.',false],
-  flat:['You get $190 now. Bybit locks $2,310 and a big move can take all of it. This one can cost more than it pays.',true],big:['The most you can lose is the $250 you paid. The further it moves, the more it pays.',false]};
-$$('.mp').forEach(b=>b.onclick=()=>{kind=b.dataset.k;$$('.mp').forEach(x=>x.setAttribute('aria-pressed',x===b));surfTarget(kind);setWorst(...WORST1[kind]);});
-function setWorst(t,hot){$('#worst-t').textContent=t;$('#worst').classList.toggle('hot',!!hot);}
+$$('.mp').forEach(b=>b.onclick=()=>{kind=b.dataset.k;$$('.mp').forEach(x=>x.setAttribute('aria-pressed',x===b));surfTarget(kind);});
 
 /* ───────── SECTION 2: one gold line across the dark. Your coin rises to it ───────── */
-const L=mk(0);
+const L=mk(-.95);
 const barMat=new THREE.MeshStandardMaterial({color:GOLD,emissive:GOLD,emissiveIntensity:1.4,metalness:.6,roughness:.3});
 const bar=new THREE.Mesh(new THREE.BoxGeometry(19,.06,.06),barMat);bar.position.y=1.15;L.add(bar);
 const barLbl=textPlane('$64,000 by tonight',4.6,'rgba(242,181,68,.85)',74,'500');barLbl.position.set(4.0,1.62,0);L.add(barLbl);
-const chip2=makeCoin(1.05,.16);coins.push(chip2);L.add(chip2);const chipL=new THREE.PointLight(0xf2b544,0,8);chip2.add(chipL);
+const chip2=makeCoin(1.05,.16);coins.push(chip2);L.add(chip2);const chipL=new THREE.PointLight(0xf2b544,0,6);chip2.add(chipL);
 
 /* ───────── SECTION 3: the landing. A dish of brushed metal rings. Your coin settles into it ───────── */
 const R=mk(-1.1);R.rotation.x=-.78;R.userData.s0=.74;
@@ -195,6 +195,7 @@ const pTint=[WIN,LOSS,WIN,WHITE,LOSS,GOLD],pieces=[];
 for(let i=0;i<6;i++){const w=5.4-i*.55;const m=new THREE.MeshPhysicalMaterial({color:tmpC.copy(DARK).lerp(pTint[i],.55).clone(),metalness:.15,roughness:.14,transmission:.5,thickness:1.4,ior:1.4,envMapIntensity:1.1});
   const b=new THREE.Mesh(new THREE.BoxGeometry(w,.5,w*.68),m);b.userData={rest:-2.05+i*.56,x0:i%2?9.5:-9.5};b.position.set(b.userData.x0,b.userData.rest,0);B.add(b);pieces.push(b);}
 const WORST4=['−$250','−$250','−$250','−$610','−$610','−$2,310'];
+const wl=textPlane('MAX LOSS  −$250',6.2,'rgba(245,245,247,.75)',54,'500','JetBrains Mono, monospace');wl.position.set(3.9,1.2,0);wl.visible=false;B.add(wl);
 
 /* ───────── SECTION 5: the board. A tunnel of live strikes you dolly through ───────── */
 const T=mk(.3);
@@ -213,19 +214,18 @@ setAsset(0);
 const SECT=7,STAGES=$$('.stage');let prog=0,progT=0;
 addEventListener('scroll',()=>{const max=document.body.scrollHeight-innerHeight;progT=clamp(scrollY/max,0,1);},{passive:true});
 window.__setProg=v=>{progT=v;prog=v;};window.__asset=i=>{setAsset(i);$('#w').textContent=ASSETS[i].w;};
-const PLATE=['GRAVITAS','01 · EASY OPTIONS','02 · HERO ZERO','03 · EXPIRY TRADING','04 · STRATEGY BUILDER','05 · THE BOARD','GRAVITAS'];
-function place(g,i,f){const u=f-i;const pres=clamp(1-Math.abs(u),0,1);g.visible=pres>.001;if(!g.visible)return null;
-  const a=u<0?eOutCubic(1+u):1,d=u>0?eInCubic(u):0;
-  g.position.z=lerp(-18,0,a)+d*2.5;g.position.y=g.userData.y0-(1-a)*2.2+d*7.5;const sc=lerp(.7,1,a)*(1-d*.25)*(g.userData.s0||1);g.scale.setScalar(sc);
+const rail=$('#rail');for(let i=0;i<SECT;i++)rail.appendChild(document.createElement('i'));
+function place(g,i,f){const u=f-i;const pres=clamp(1-Math.abs(u)*1.8,0,1);g.visible=u>-.55&&u<.45;if(!g.visible)return null;
+  const a=u<0?eOutCubic(clamp((u+.55)/.5,0,1)):1,d=u>0?eInCubic(clamp(u/.45,0,1)):0;
+  g.position.z=lerp(-20,0,a)-d*14;g.position.y=g.userData.y0-(1-a)*1.6-d*1.2;const sc=lerp(.75,1,a)*(1-d*.45)*(g.userData.s0||1);g.scale.setScalar(sc);
   return {u,s:clamp((u+.38)/.8,0,1),pres};}
 let lastSect=-1,last=performance.now();const focusV=new THREE.Vector3();
 function frame(){const t=performance.now(),dt=Math.min(.05,(t-last)/1000);last=t;const now=t*.001;
-  prog+=(progT-prog)*(1-Math.pow(.02,dt));
+  prog+=(progT-prog)*(1-Math.pow(.0006,dt));
   const f=prog*(SECT-1),sect=clamp(Math.round(f),0,SECT-1);
   /* copy scrubs with the scene */
   STAGES.forEach((s,i)=>{const u=f-i;const op=clamp(1-Math.abs(u)*2.4,0,1);s.style.opacity=op;s.style.transform=`translateY(${-u*70}px)`;s.style.pointerEvents=op>.5?'auto':'none';});
-  if(sect!==lastSect){lastSect=sect;$('#plate').textContent=PLATE[sect];$('#hint').style.opacity=sect===SECT-1?0:1;if(sect===1)setWorst(...WORST1[kind]);}
-  $('#worst').classList.toggle('on',sect>=1&&sect<=4&&Math.abs(f-sect)<.42);
+  if(sect!==lastSect){lastSect=sect;[...rail.children].forEach((d,i)=>d.classList.toggle('on',i===sect));$('#hint').style.opacity=sect===SECT-1?0:1;}
   cam.position.x=Math.sin(now*.11)*.35;cam.position.y=.9+Math.sin(now*.17)*.12;cam.lookAt(0,.15,0);
   let focusZ=0,shadowS=0;
 
@@ -235,20 +235,20 @@ function frame(){const t=performance.now(),dt=Math.min(.05,(t-last)/1000);last=t
     else{hero.rotation.x=0;if(r.u>-.3&&r.u<.3&&now>nextRoll){nextRoll=now+4.2;rollT=0;swapped=false;}}
     shadowS=Math.max(shadowS,r.pres*1.15);}}
   /* 1 payoff slab */
-  {const r=place(P,1,f);if(r){P.rotation.y=r.u*.7+Math.sin(now*.2)*.06;let mv=false;for(let i=0;i<sPos.count;i++){const d=sTgt[i]-sCur[i];if(Math.abs(d)>1e-4){sCur[i]+=d*.045;mv=true;}}if(mv)paintSurf();}}
+  {const r=place(P,1,f);if(r){P.rotation.y=r.u*.7+Math.sin(now*.2)*.06;let mv=false;for(let i=0;i<sPos.count;i++){const d=sTgt[i]-sCur[i];if(Math.abs(d)>1e-4){sCur[i]+=d*.09;mv=true;}}if(mv)paintSurf();}}
   /* 2 the line */
   {const r=place(L,2,f);if(r){const e=eInOutCubic(r.s);const y=lerp(-2.0,3.3,e);chip2.position.set(0,y,.6);chip2.rotation.y=Math.sin(now*.6)*.35;chip2.rotation.x=-e*1.2;
-    const over=clamp((y-1.15)/.5,0,1);barMat.color.copy(GOLD).lerp(WIN,over);barMat.emissive.copy(GOLD).lerp(WIN,over);chipL.intensity=6+over*24;chipL.color.copy(GOLD).lerp(WIN,over);
-    if(sect===2)setWorst(over>=1?'Cleared. Your $250 is now $500.':'The most you can lose is the $250 you paid.',false);shadowS=Math.max(shadowS,r.pres*.7);}}
+    const over=clamp((y-1.15)/.5,0,1);barMat.color.copy(GOLD).lerp(WIN,over);barMat.emissive.copy(GOLD).lerp(WIN,over);chipL.intensity=2.5+over*14;chipL.color.copy(GOLD).lerp(WIN,over);
+    retext(barLbl,over>=1?'$64,000 · cleared · ×2':'$64,000 by tonight');shadowS=Math.max(shadowS,r.pres*.7);}}
   /* 3 the landing */
   {const r=place(R,3,f);if(r){R.rotation.x=-.78+r.u*.25;R.rotation.z=Math.sin(now*.15)*.04;
     const drop=clamp((r.s-.12)/.7,0,1);const y=lerp(7,.62,eInQuad(drop));chip3.position.set(.25,y,.15);chip3.rotation.z=(1-drop)*.5;
     rings.forEach((rg,i)=>{const lit=clamp((r.s-.05-i*.09)/.14,0,1);rg.edge.material.emissiveIntensity=.5+lit*rg.base;});
-    if(sect===3)setWorst(drop>=1?'Landed inside $64,000. Your $250 is now $610.':'The most you can lose is the $250 you paid.',false);shadowS=Math.max(shadowS,r.pres*1.4);}}
+    shadowS=Math.max(shadowS,r.pres*1.4);}}
   /* 4 the stack */
   {const r=place(B,4,f);if(r){B.rotation.y=.55+r.u*.5+Math.sin(now*.12)*.08;let n=0;
-    pieces.forEach((b,i)=>{const lc=clamp((r.s-i*.11)/.3,0,1),e=eOutQuint(lc);b.position.x=lerp(b.userData.x0,0,e);b.position.y=b.userData.rest+(1-e)*1.6;b.rotation.y=(1-e)*.4*(i%2?-1:1);if(lc>=1)n=i+1;});
-    if(sect===4&&n>0){const hot=n>=4;setWorst('Worst case '+WORST4[n-1]+(hot?'. This build can cost more than you paid.':'. Loss capped.'),hot);}shadowS=Math.max(shadowS,r.pres*1.1);}}
+    pieces.forEach((b,i)=>{const lc=clamp((r.s-i*.11)/.3,0,1),e=eOutQuint(lc);b.visible=lc>0;b.position.x=lerp(b.userData.x0,0,e);b.position.y=b.userData.rest+(1-e)*1.6;b.rotation.y=(1-e)*.4*(i%2?-1:1);if(lc>=1)n=i+1;});
+    if(n>0){const hot=n>=4;retext(wl,'MAX LOSS  '+WORST4[n-1]+(hot?'  ·  UNCAPPED':''));wl.material.color.set(hot?'#ff4d6d':'#f5f5f7');}wl.visible=n>0;wl.position.y=-2.05+Math.max(1,n)*.56+.4;wl.lookAt(cam.position);shadowS=Math.max(shadowS,r.pres*1.1);}}
   /* 5 the board: dolly through */
   {const r=place(T,5,f);if(r){T.position.z+=lerp(-14,9,eInOutCubic(r.s));T.rotation.z=Math.sin(now*.2)*.03;focusZ=T.position.z;}}
   /* 6 close */
