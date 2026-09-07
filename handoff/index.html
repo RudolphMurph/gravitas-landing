@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Gravitas · Crypto options, rebuilt by traders</title>
+  <meta name="description" content="Bitcoin, Ethereum, Solana and Gold options without the option chain. Pick the move, pick the day, pay once.">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;500;700&family=Inter:wght@400;500&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- The 3D scene. Fixed, full-screen, driven by scroll position. -->
+  <canvas id="world"></canvas>
+  <div class="vignette" aria-hidden="true"></div>
+
+  <nav class="nav">
+    <a class="logo" href="#">
+      <svg width="30" height="30" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+        <ellipse cx="16" cy="16" rx="14.2" ry="7" stroke="rgba(255,255,255,.35)" stroke-width="1.2" transform="rotate(-28 16 16)"/>
+        <path d="M2.6 24.2 H12.4 L29.4 6.6" stroke="#f2b544" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="12.4" cy="24.2" r="3.1" fill="#050507" stroke="#f2b544" stroke-width="2.2"/>
+      </svg>
+      Gravitas
+    </a>
+    <div class="nav-actions">
+      <a class="btn btn-ghost" href="#">Log in</a>
+      <a class="btn btn-solid" href="#">Get started</a>
+    </div>
+  </nav>
+
+  <!--
+    Copy. One .stage per scene section, in order. JS fades and nudges each stage
+    as the matching 3D object arrives and leaves. Keep the count in sync with
+    SECTIONS in scene.js.
+  -->
+  <div class="hud">
+    <div class="stage" data-section="0">
+      <h1>
+        <em class="roll" id="slot-asset"><span>Bitcoin.</span></em>
+        <span class="roll" id="slot-move-a"><span>Up</span></span>
+        or
+        <span class="roll" id="slot-move-b"><span>down.</span></span>
+        <br>Your call.
+        <span id="measure" aria-hidden="true"></span>
+      </h1>
+      <p class="sub">Options without the option chain. Pick the move. Pick the day. Pay once.</p>
+    </div>
+
+    <div class="stage" data-section="1">
+      <p class="eyebrow">01 · Easy Options</p>
+      <h2>Four moves. One tap.</h2>
+      <p class="sub">Today, tomorrow, this week or this month. We pick the strikes.</p>
+      <div class="pills" id="pills">
+        <button class="pill" data-kind="up"   aria-pressed="true">Up</button>
+        <button class="pill" data-kind="down" aria-pressed="false">Down</button>
+        <button class="pill" data-kind="flat" aria-pressed="false">Flat</button>
+        <button class="pill" data-kind="wild" aria-pressed="false">Wild</button>
+      </div>
+    </div>
+
+    <div class="stage" data-section="2">
+      <p class="eyebrow">02 · Hero Zero</p>
+      <h2>Double or nothing.<br>By tonight.</h2>
+      <p class="sub">One small stake on today's move. Over the line, it doubles.</p>
+    </div>
+
+    <div class="stage" data-section="3">
+      <p class="eyebrow">03 · Expiry Trading</p>
+      <h2>Call the close.</h2>
+      <p class="sub">Say where it lands at expiry. Tighter call, bigger payout.</p>
+    </div>
+
+    <div class="stage" data-section="4">
+      <p class="eyebrow">04 · Strategy Builder</p>
+      <h2>Your strikes. Your payoff.</h2>
+      <p class="sub">Every leg on the live chain. Worst case rewrites as you build.</p>
+    </div>
+
+    <div class="stage" data-section="5">
+      <p class="eyebrow">05 · The Board</p>
+      <h2>Every strike, live.</h2>
+      <p class="sub">Real bids. Real asks. Never a dead quote.</p>
+    </div>
+
+    <div class="stage stage-mid" data-section="6">
+      <p class="eyebrow">Gravitas</p>
+      <h2>Crypto options,<br>rebuilt by <em>traders.</em></h2>
+      <p class="sub">Your Bybit account. Your keys. We never hold your money.</p>
+      <a class="btn btn-gold cta" href="#">Place your first ticket</a>
+      <p class="sub small">Options can lose everything you put in. Not financial advice.</p>
+    </div>
+  </div>
+
+  <div class="rail" id="rail" aria-hidden="true"></div>
+  <div class="hint" id="hint" aria-hidden="true"><i></i>SCROLL</div>
+
+  <!-- Tall scroll track. Its height sets how much scrolling the whole story takes. -->
+  <div id="track"></div>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+  <script type="module" src="scene.js"></script>
+</body>
+</html>
